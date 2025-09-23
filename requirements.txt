@@ -1,0 +1,16 @@
+
+---
+
+## 📌 `requirements.txt` (Starter)
+```txt
+numpy
+pandas
+matplotlib
+seaborn
+opencv-python
+scikit-learn
+tensorflow
+torch
+flask
+flask-cors
+sqlalchemy
