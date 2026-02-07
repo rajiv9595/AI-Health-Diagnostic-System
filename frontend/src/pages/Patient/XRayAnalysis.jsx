@@ -104,18 +104,18 @@ const XRayAnalysis = () => {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-sm mx-auto">
                     <div className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm">
-                      Choose File
+                      Choose File / Camera
                     </div>
                     <div className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg border border-gray-200 sm:hidden">
-                      Open Camera
+                      Tap to Capture
                     </div>
                   </div>
                 </div>
+                {/* Primary Input - Handles both file selection and camera on most devices */}
                 <input
                   type="file"
                   className="hidden"
                   accept="image/*"
-                  capture="environment"
                   onChange={handleFileSelect}
                 />
               </label>
