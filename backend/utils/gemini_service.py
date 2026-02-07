@@ -31,8 +31,8 @@ def analyze_symptoms_with_gemini(symptoms_text):
         return None
         
     try:
-        # Use Gemini 2.5 Flash as requested
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        # Use Gemini 1.5 Flash (stable, fast)
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"""
         Act as an expert medical AI assistant. Analyze the following symptoms and provide a preliminary diagnosis.
@@ -108,7 +108,7 @@ def verify_chest_xray(image_path):
         return True, "API not configured"
         
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash') # Using 1.5 flash for vision tasks
+        model = genai.GenerativeModel('gemini-1.5-flash')
         
         # Load image
         img = Image.open(image_path)
@@ -132,5 +132,5 @@ def verify_chest_xray(image_path):
         
     except Exception as e:
         logger.error(f"Gemini image verification failed: {e}")
-        # Fail-open if verification fails technically
-        return True, "Verification failed technically"
+        # Fail-closed for security: if we can't verify it's an X-ray, assume it's NOT
+        return False, "Verification system unavailable. Please try again."
