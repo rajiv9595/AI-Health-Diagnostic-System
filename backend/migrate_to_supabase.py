@@ -1,146 +1,135 @@
-
-import os
 import sys
-from sqlalchemy import create_engine, MetaData, Table
-from sqlalchemy.orm import sessionmaker
-import config
-
-# Add backend to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-
-from app import create_app
+import os
+from flask import Flask
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker, make_transient
+# Skip 'from app import create_app' to avoid TensorFlow/OpenCV DLL issues
 from models.database import db, User, Patient, Doctor, XRayReport, SymptomCheck, Alert
+from config import config
 
-def migrate_data(target_db_url):
-    """
-    Migrate data from local SQLite to Supabase (PostgreSQL)
-    """
-    print(f"Target DB: {target_db_url.split('@')[1] if '@' in target_db_url else '...'}")
+def create_minimal_app(config_name='development'):
+    app = Flask(__name__)
+    # Load config but FORCE SQLite for source extraction
+    # This prevents accidental connection to Supabase if .env is loaded
+    app.config.from_object(config[config_name])
+    basedir = os.path.abspath(os.path.dirname(__file__))
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'health_diagnostic.db')
+    db.init_app(app)
+    return app
+
+def migrate_to_supabase():
+    # 1. Setup - Get Supabase URL
+    print("\n📦 Database Migration Tool (Local -> Supabase)")
+    print("WARNING: This will overwrite data in the target Supabase database if tables exist.")
+    supabase_url = input("Enter your Supabase Connection String (postgresql://...): ").strip()
     
-    # 1. Initialize App with Source DB (Local)
-    app = create_app('development')
+    if not supabase_url.startswith("postgresql://") and not supabase_url.startswith("postgres://"):
+        print("Invalid URL format. Must start with postgresql://")
+        return
+
+    # Fix for sqlalchemy expecting postgresql:// not postgres://
+    if supabase_url.startswith("postgres://"):
+        supabase_url = supabase_url.replace("postgres://", "postgresql://", 1)
+
+    # 2. Extract Data from Local SQLite
+    print("\nExtracting data from local database...")
     
-    # 2. Create Target Engine
-    target_engine = create_engine(target_db_url)
-    TargetSession = sessionmaker(bind=target_engine)
-    target_session = TargetSession()
-    
-    with app.app_context():
-        print("Connected to Source DB (SQLite)...")
+    # Force SQLite for source (ignore .env if set)
+    if 'DATABASE_URL' in os.environ:
+        del os.environ['DATABASE_URL']
         
-        # Ensure Target Tables Exist
-        print("Creating tables in Target DB...")
+    local_app = create_minimal_app('development')
+    
+    data_map = {}
+    with local_app.app_context():
+        # Order matters for foreign keys!
+        # Users first, then Profiles (Patient/Doctor), then Reports/Alerts
+        try:
+            users = User.query.all()
+            patients = Patient.query.all()
+            doctors = Doctor.query.all()
+            reports = XRayReport.query.all()
+            checks = SymptomCheck.query.all()
+            alerts = Alert.query.all()
+            
+            # Detach objects from session so we can attach to new one
+            for collection in [users, patients, doctors, reports, checks, alerts]:
+                for obj in collection:
+                    db.session.expunge(obj)
+                    make_transient(obj)
+            
+            data_map = {
+                'users': users,
+                'patients': patients,
+                'doctors': doctors,
+                'reports': reports,
+                'checks': checks,
+                'alerts': alerts
+            }
+            print(f"Loaded: {len(users)} users, {len(patients)} patients, {len(doctors)} doctors...")
+            
+        except Exception as e:
+            print(f"Error reading local DB: {e}")
+            return
+
+    # 3. Connect to Supabase and Insert
+    print(f"\nConnecting to Supabase...")
+    target_engine = create_engine(supabase_url)
+    Session = sessionmaker(bind=target_engine)
+    session = Session()
+
+    try:
+        # Create Tables
+        print("Creating tables on Supabase...")
+        # We need to bind the metadata to the new engine to create tables
         db.metadata.create_all(target_engine)
         
-        # --- Migrate Users ---
-        print("Migrating Users...")
-        users = User.query.all()
-        for u in users:
-            # Check if exists
-            exists = target_session.execute(
-                Table('user', MetaData(), autoload_with=target_engine).select().where(Table('user', MetaData(), autoload_with=target_engine).c.email == u.email)
-            ).first()
+        # Insert Data
+        print("Migrating data...")
+        
+        # Users
+        for u in data_map['users']:
+            session.merge(u) # Merge handles explicit IDs better
+        session.flush()
+        
+        # Profiles
+        for p in data_map['patients']: session.merge(p)
+        for d in data_map['doctors']: session.merge(d)
+        session.flush()
+        
+        # Data
+        for r in data_map['reports']: session.merge(r)
+        for c in data_map['checks']: session.merge(c)
+        for a in data_map['alerts']: session.merge(a)
+        
+        session.commit()
+        print("✅ Data migration successful!")
+        
+        # 4. Update Sequences (Essential for Postgres)
+        print("Updating ID sequences...")
+        tables = ['users', 'patients', 'doctors', 'xray_reports', 'symptom_checks', 'alerts']
+        # Note: Table names might differ slightly in DB (e.g. user vs users). 
+        # Checking models.database.py for __tablename__ is better, or assuming defaults.
+        # SQLAlchemy default is snake_case of class name usually, but let's check.
+        # Check actual table names:
+        with target_engine.connect() as conn:
+            for table in tables:
+                try:
+                    # Postgres sequence naming convention: table_id_seq
+                    seq_name = f"{table}_id_seq"
+                    # Reset sequence to max id
+                    sql = text(f"SELECT setval('{seq_name}', (SELECT MAX(id) FROM {table}));")
+                    conn.execute(sql)
+                    print(f"  Fixed sequence for {table}")
+                except Exception as ex:
+                    print(f"  Skipping sequence update for {table} (might not exist or different name): {ex}")
+            conn.commit()
             
-            if not exists:
-                new_user = User(
-                    email=u.email,
-                    password_hash=u.password_hash,
-                    role=u.role,
-                    created_at=u.created_at
-                )
-                # Force ID to match to keep relationships intact
-                new_user.id = u.id 
-                target_session.merge(new_user)
-        target_session.commit()
-        
-        # --- Migrate Doctors ---
-        print("Migrating Doctors...")
-        doctors = Doctor.query.all()
-        for d in doctors:
-            new_doc = Doctor(
-                id=d.id,
-                user_id=d.user_id,
-                full_name=d.full_name,
-                specialization=d.specialization,
-                license_number=d.license_number,
-                phone=d.phone,
-                hospital=d.hospital,
-                created_at=d.created_at
-            )
-            target_session.merge(new_doc)
-        target_session.commit()
-
-        # --- Migrate Patients ---
-        print("Migrating Patients...")
-        patients = Patient.query.all()
-        for p in patients:
-            new_pat = Patient(
-                id=p.id,
-                user_id=p.user_id,
-                full_name=p.full_name,
-                dob=p.dob,
-                gender=p.gender,
-                phone=p.phone,
-                address=p.address,
-                medical_history=p.medical_history,
-                created_at=p.created_at
-            )
-            target_session.merge(new_pat)
-        target_session.commit()
-
-        # --- Migrate XRayReports ---
-        print("Migrating X-Ray Reports...")
-        reports = XRayReport.query.all()
-        for r in reports:
-            new_report = XRayReport(
-                id=r.id,
-                patient_id=r.patient_id,
-                doctor_id=r.doctor_id,
-                image_path=r.image_path,
-                prediction=r.prediction,
-                confidence=r.confidence,
-                details=r.details,
-                gradcam_path=r.gradcam_path,
-                status=r.status,
-                predicted_class=r.predicted_class, # Ensure this field exists in model
-                created_at=r.created_at
-            )
-            target_session.merge(new_report)
-        target_session.commit()
-        
-        # --- Migrate SymptomChecks ---
-        print("Migrating Symptom Checks...")
-        checks = SymptomCheck.query.all()
-        for c in checks:
-            new_check = SymptomCheck(
-                id=c.id,
-                patient_id=c.patient_id,
-                symptoms=c.symptoms,
-                predicted_disease=c.predicted_disease,
-                confidence=c.confidence,
-                recommendations=c.recommendations,
-                urgency_level=c.urgency_level,
-                created_at=c.created_at
-            )
-            target_session.merge(new_check)
-        target_session.commit()
-        
-        print("✅ Migration Complete!")
+    except Exception as e:
+        session.rollback()
+        print(f"❌ Migration failed: {e}")
+    finally:
+        session.close()
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python migrate_to_supabase.py <SUPABASE_CONNECTION_STRING>")
-        print("Example: python migrate_to_supabase.py postgresql://user:pass@host:port/db")
-        sys.exit(1)
-        
-    target_url = sys.argv[1]
-    # SQLAlchemy requires 'postgresql://' not 'postgres://' which Supabase sometimes gives
-    if target_url.startswith('postgres://'):
-        target_url = target_url.replace('postgres://', 'postgresql://', 1)
-        
-    try:
-        migrate_data(target_url)
-    except Exception as e:
-        print(f"❌ Migration Failed: {e}")
-        import traceback
-        traceback.print_exc()
+    migrate_to_supabase()
