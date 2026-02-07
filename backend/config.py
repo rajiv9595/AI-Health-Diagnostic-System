@@ -44,7 +44,7 @@ class Config:
     XRAY_CLASSES = ['Normal', 'Pneumonia', 'Tuberculosis', 'COVID-19']
     
     # Gemini Settings
-    GEMINI_MODEL = "gemini-1.5-flash"
+    GEMINI_MODEL = "gemini-2.5-flash"
     
     # Urgency Levels
     URGENCY_LEVELS = {
