@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../../components/Layout';
 import { xrayAPI } from '../../services/api';
-import { Upload, Image as ImageIcon, AlertCircle, CheckCircle, Loader } from 'lucide-react';
+import { Upload, Image as ImageIcon, AlertCircle, CheckCircle, Loader, Camera } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 const XRayAnalysis = () => {
@@ -90,15 +90,32 @@ const XRayAnalysis = () => {
 
             {!preview ? (
               <label className="block cursor-pointer">
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-primary-500 transition-colors">
-                  <Upload className="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                  <p className="text-gray-600 mb-2">Click to upload or drag and drop</p>
-                  <p className="text-sm text-gray-500">PNG, JPG up to 16MB</p>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-10 text-center hover:border-primary-500 transition-colors group">
+                  <div className="flex justify-center space-x-6 mb-4">
+                    <div className="bg-gray-50 p-4 rounded-full group-hover:bg-primary-50 transition-colors">
+                      <Upload className="h-10 w-10 text-gray-400 group-hover:text-primary-500" />
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-full group-hover:bg-primary-50 transition-colors hidden sm:flex">
+                      <Camera className="h-10 w-10 text-gray-400 group-hover:text-primary-500" />
+                    </div>
+                  </div>
+                  <p className="text-gray-900 font-medium mb-1">Click to upload or take a photo</p>
+                  <p className="text-sm text-gray-500 mb-4">PNG, JPG up to 16MB</p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-sm mx-auto">
+                    <div className="px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-lg shadow-sm">
+                      Choose File
+                    </div>
+                    <div className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg border border-gray-200 sm:hidden">
+                      Open Camera
+                    </div>
+                  </div>
                 </div>
                 <input
                   type="file"
                   className="hidden"
                   accept="image/*"
+                  capture="environment"
                   onChange={handleFileSelect}
                 />
               </label>
@@ -140,8 +157,8 @@ const XRayAnalysis = () => {
             {result ? (
               <div className="space-y-6">
                 <div className={`p-6 rounded-xl border-l-4 shadow-sm ${result.predicted_class === 'Normal'
-                    ? 'bg-green-50 border-green-500'
-                    : 'bg-red-50 border-red-500'
+                  ? 'bg-green-50 border-green-500'
+                  : 'bg-red-50 border-red-500'
                   }`}>
                   <div className="flex items-center space-x-4 mb-3">
                     {result.predicted_class === 'Normal' ? (
@@ -285,7 +302,7 @@ const XRayAnalysis = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`badge-${report.status === 'urgent' ? 'error' :
-                            report.status === 'reviewed' ? 'success' : 'info'
+                          report.status === 'reviewed' ? 'success' : 'info'
                           }`}>
                           {report.status}
                         </span>
