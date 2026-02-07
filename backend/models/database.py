@@ -187,7 +187,7 @@ class SymptomCheck(db.Model):
             'confidence': self.confidence,
             'urgency_level': self.urgency_level,
             'top_predictions': self.get_top_predictions(),
-            'recommendations': self.recommendations,
+            'recommendations': self.recommendations.split('\n') if self.recommendations else [],
             'status': self.status,
             'created_at': self.created_at.isoformat()
         }
