@@ -40,6 +40,7 @@ class COVIDNetAnalyzer:
         self.num_classes = num_classes
         self.class_names = ['COVID-19', 'Normal', 'Pneumonia', 'Tuberculosis']
         self.use_tflite = False
+        self.model = None  # Ensure attribute exists for TFLite mode
         
         # 1. Try TFLite Model first (Preferred for Production)
         tflite_path = model_path.replace('.keras', '.tflite') if model_path else None
