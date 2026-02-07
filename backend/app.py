@@ -141,9 +141,12 @@ def create_app(config_name='development'):
     
     return app
 
+# Create app instance for Gunicorn/Production
+# This allows 'gunicorn app:app' to work
+app = create_app(os.getenv('FLASK_ENV', 'production'))
 
 if __name__ == '__main__':
-    app = create_app()
+    # When running directly (local dev), used debug mode
     print("\n" + "="*60)
     print("🩺 AI Health Diagnostic System - Backend API")
     print("="*60)
