@@ -72,7 +72,6 @@ def check_symptoms():
                 print(f"Gemini API error: {e}")
                 prediction = None
         
-        # Fallback to local model if Gemini fails or key missing
         if not prediction:
             # Get symptom checker
             checker = get_symptom_checker()
@@ -80,26 +79,25 @@ def check_symptoms():
             try:
                 # Predict disease
                 prediction = checker.predict(symptoms_text)
-            
-        except Exception as e:
-            # If model doesn't exist, return dummy prediction
-            print(f"Symptom prediction error: {e}")
-            prediction = {
-                'predicted_disease': 'Common Cold',
-                'confidence': 0.75,
-                'urgency_level': 'mild',
-                'top_predictions': [
-                    {'disease': 'Common Cold', 'confidence': 0.75, 'urgency': 'mild'},
-                    {'disease': 'Allergy', 'confidence': 0.15, 'urgency': 'mild'},
-                    {'disease': 'Flu', 'confidence': 0.10, 'urgency': 'moderate'}
-                ],
-                'recommendations': [
-                    'Rest and monitor your symptoms',
-                    'Stay hydrated and get plenty of rest',
-                    'Consider over-the-counter medication if needed',
-                    'This is an AI prediction and not a substitute for professional medical advice'
-                ]
-            }
+            except Exception as e:
+                # If model doesn't exist, return dummy prediction
+                print(f"Symptom prediction error: {e}")
+                prediction = {
+                    'predicted_disease': 'Common Cold',
+                    'confidence': 0.75,
+                    'urgency_level': 'mild',
+                    'top_predictions': [
+                        {'disease': 'Common Cold', 'confidence': 0.75, 'urgency': 'mild'},
+                        {'disease': 'Allergy', 'confidence': 0.15, 'urgency': 'mild'},
+                        {'disease': 'Flu', 'confidence': 0.10, 'urgency': 'moderate'}
+                    ],
+                    'recommendations': [
+                        'Rest and monitor your symptoms',
+                        'Stay hydrated and get plenty of rest',
+                        'Consider over-the-counter medication if needed',
+                        'This is an AI prediction and not a substitute for professional medical advice'
+                    ]
+                }
         
         # Save to database
         symptom_check = SymptomCheck(
@@ -194,41 +192,41 @@ def check_symptoms_v2():
         if not prediction:
             checker = get_symptom_checker()
             try:
-            # Heuristic: use advanced model if long paragraph and transformers available
-            use_adv = bool(data.get('use_advanced')) or (len(text) > 80 and _ADV_AVAILABLE)
-            if use_adv and _ADV_AVAILABLE:
-                try:
-                    adv = SymptomBERT()
-                    adv_pred = adv.predict(text)
-                    # Map into baseline format and blend urgency using parser rules via checker
-                    baseline_like = {
-                        'predicted_disease': adv_pred['predicted_disease'],
-                        'confidence': adv_pred['confidence'],
-                        'urgency_level': adv._urgency_hint(adv_pred['predicted_disease']),
-                        'top_predictions': adv_pred['top_predictions'],
-                        'recommendations': ''
-                    }
-                    # Reuse recommendation + rule merge from checker
-                    tmp = checker.generate_recommendations(
-                        baseline_like['predicted_disease'], baseline_like['urgency_level'], baseline_like['confidence']
-                    )
-                    baseline_like['recommendations'] = '\n'.join(tmp)
-                    prediction = baseline_like
-                except Exception as _:
+                # Heuristic: use advanced model if long paragraph and transformers available
+                use_adv = bool(data.get('use_advanced')) or (len(text) > 80 and _ADV_AVAILABLE)
+                if use_adv and _ADV_AVAILABLE:
+                    try:
+                        adv = SymptomBERT()
+                        adv_pred = adv.predict(text)
+                        # Map into baseline format and blend urgency using parser rules via checker
+                        baseline_like = {
+                            'predicted_disease': adv_pred['predicted_disease'],
+                            'confidence': adv_pred['confidence'],
+                            'urgency_level': adv._urgency_hint(adv_pred['predicted_disease']),
+                            'top_predictions': adv_pred['top_predictions'],
+                            'recommendations': ''
+                        }
+                        # Reuse recommendation + rule merge from checker
+                        tmp = checker.generate_recommendations(
+                            baseline_like['predicted_disease'], baseline_like['urgency_level'], baseline_like['confidence']
+                        )
+                        baseline_like['recommendations'] = '\n'.join(tmp)
+                        prediction = baseline_like
+                    except Exception as _:
+                        prediction = checker.predict(', '.join(symptoms_for_model))
+                else:
                     prediction = checker.predict(', '.join(symptoms_for_model))
-            else:
-                prediction = checker.predict(', '.join(symptoms_for_model))
-        except Exception as e:
-            print(f"Symptom v2 prediction error: {e}")
-            prediction = {
-                'predicted_disease': 'Undetermined',
-                'confidence': 0.0,
-                'urgency_level': parsed.get('severity_hint', 'mild'),
-                'top_predictions': [],
-                'recommendations': [
-                    'Insufficient data. Please provide more details about your symptoms.',
-                ],
-            }
+            except Exception as e:
+                print(f"Symptom v2 prediction error: {e}")
+                prediction = {
+                    'predicted_disease': 'Undetermined',
+                    'confidence': 0.0,
+                    'urgency_level': parsed.get('severity_hint', 'mild'),
+                    'top_predictions': [],
+                    'recommendations': [
+                        'Insufficient data. Please provide more details about your symptoms.',
+                    ],
+                }
 
         # Merge urgency hint
         if prediction.get('urgency_level') == 'mild' and parsed.get('severity_hint') == 'severe':
