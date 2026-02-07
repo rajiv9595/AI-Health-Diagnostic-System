@@ -11,7 +11,9 @@ try:
     _ADV_AVAILABLE = True
 except Exception:
     _ADV_AVAILABLE = False
+    _ADV_AVAILABLE = False
 import os
+from utils.gemini_service import analyze_symptoms_with_gemini
 
 symptoms_bp = Blueprint('symptoms', __name__)
 
@@ -58,12 +60,26 @@ def check_symptoms():
         
         symptoms_text = data['symptoms']
         
-        # Get symptom checker
-        checker = get_symptom_checker()
+        # Check for Gemini API Key
+        gemini_key = os.getenv('GEMINI_API_KEY')
+        prediction = None
         
-        try:
-            # Predict disease
-            prediction = checker.predict(symptoms_text)
+        if gemini_key:
+            try:
+                # Try Gemini analysis
+                prediction = analyze_symptoms_with_gemini(symptoms_text)
+            except Exception as e:
+                print(f"Gemini API error: {e}")
+                prediction = None
+        
+        # Fallback to local model if Gemini fails or key missing
+        if not prediction:
+            # Get symptom checker
+            checker = get_symptom_checker()
+            
+            try:
+                # Predict disease
+                prediction = checker.predict(symptoms_text)
             
         except Exception as e:
             # If model doesn't exist, return dummy prediction
@@ -154,8 +170,30 @@ def check_symptoms_v2():
         if not symptoms_for_model and text:
             symptoms_for_model = [text]
 
-        checker = get_symptom_checker()
-        try:
+        # Check for Gemini API Key
+        gemini_key = os.getenv('GEMINI_API_KEY')
+        prediction = None
+        
+        if gemini_key:
+            try:
+                # Try Gemini analysis on raw text or combined keywords
+                input_text = text if text else ', '.join(keywords)
+                prediction = analyze_symptoms_with_gemini(input_text)
+                
+                # If Gemini successful, format response similar to local model
+                if prediction:
+                    # Provide parsed structure as well if available
+                    # If parsing failed or wasn't done appropriately because of Gemini usage
+                    if not parsed or (not parsed['extracted'] and not parsed['raw']):
+                        parsed = {'extracted': [], 'raw': input_text, 'severity_hint': prediction.get('urgency_level', 'mild')}
+
+            except Exception as e:
+                print(f"Gemini API error (v2): {e}")
+                prediction = None
+
+        if not prediction:
+            checker = get_symptom_checker()
+            try:
             # Heuristic: use advanced model if long paragraph and transformers available
             use_adv = bool(data.get('use_advanced')) or (len(text) > 80 and _ADV_AVAILABLE)
             if use_adv and _ADV_AVAILABLE:
