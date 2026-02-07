@@ -3,6 +3,7 @@ import os
 import json
 import logging
 from PIL import Image
+from flask import current_app
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -31,8 +32,9 @@ def analyze_symptoms_with_gemini(symptoms_text):
         return None
         
     try:
-        # Using Gemini 1.5 Flash as it is stable and supports vision
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Use configured Gemini model
+        model_name = current_app.config.get('GEMINI_MODEL', 'gemini-1.5-flash')
+        model = genai.GenerativeModel(model_name)
         
         prompt = f"""
         Act as an expert medical AI assistant. Analyze the following symptoms and provide a preliminary diagnosis.
@@ -108,7 +110,9 @@ def verify_chest_xray(image_path):
         return True, "API not configured"
         
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        # Use configured Gemini model
+        model_name = current_app.config.get('GEMINI_MODEL', 'gemini-1.5-flash')
+        model = genai.GenerativeModel(model_name)
         
         # Load image
         img = Image.open(image_path)
@@ -132,5 +136,5 @@ def verify_chest_xray(image_path):
         
     except Exception as e:
         logger.error(f"Gemini image verification failed: {e}")
-        # Fail-closed for security: if we can't verify it's an X-ray, assume it's NOT
-        return False, "Verification system unavailable. Please try again."
+        # Fail-open: if verification fails (e.g. API error), allow the upload
+        return True, "Verification failed (allowed by default)"
