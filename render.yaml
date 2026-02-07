@@ -9,5 +9,23 @@ services:
         value: 3.10.12
       - key: FLASK_ENV
         value: production
+
+  - type: static
+    name: ai-health-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://ai-health-backend-replace-me.onrender.com/api # Placeholder - Update after deploying backend
     # Free tier note: Uploaded images will be lost on restart (ephemeral filesystem).
     # Models are loaded from the repo (git), so no disk needed for them.
+
+databases:
+  - name: ai-health-db
+    databaseName: health_db
+    user: health_user
+
+# Note: The free tier does not support persistent disks.
+# For the models to persist across redeploys on free tier, 
+# you should commit the .tflite model to git.
