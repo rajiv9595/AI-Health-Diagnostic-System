@@ -8,6 +8,7 @@ from models.database import db, User, Patient, XRayReport, Alert
 from models.ml_models.covidnet_model import COVIDNetAnalyzer
 import os
 from datetime import datetime
+from utils.gemini_service import verify_chest_xray
 
 xray_bp = Blueprint('xray', __name__)
 
@@ -66,6 +67,18 @@ def upload_xray():
         filename = secure_filename(f"{user_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
         upload_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'xrays', filename)
         file.save(upload_path)
+        
+        # Verify if it's actually an X-ray using Gemini
+        is_xray, reason = verify_chest_xray(upload_path)
+        if not is_xray:
+            # Delete the invalid file
+            if os.path.exists(upload_path):
+                os.remove(upload_path)
+            return jsonify({
+                'error': 'Invalid image type',
+                'message': f"This does not appear to be a chest X-ray. {reason}",
+                'reason': reason
+            }), 400
         
         # Analyze X-ray
         analyzer = get_xray_analyzer()

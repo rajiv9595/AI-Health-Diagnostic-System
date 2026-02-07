@@ -2,6 +2,7 @@ import google.generativeai as genai
 import os
 import json
 import logging
+from PIL import Image
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -91,3 +92,45 @@ def analyze_symptoms_with_gemini(symptoms_text):
     except Exception as e:
         logger.error(f"Gemini analysis failed: {e}")
         return None
+
+def verify_chest_xray(image_path):
+    """
+    Verify if the uploaded image is actually a chest X-ray using Gemini.
+    
+    Args:
+        image_path (str): Path to the uploaded image file
+        
+    Returns:
+        tuple: (is_xray, message) - Boolean and a descriptive message
+    """
+    if not configure_gemini():
+        # If API not configured, skip verification (fail-open)
+        return True, "API not configured"
+        
+    try:
+        model = genai.GenerativeModel('gemini-1.5-flash') # Using 1.5 flash for vision tasks
+        
+        # Load image
+        img = Image.open(image_path)
+        
+        prompt = """
+        Analyze this image. Is it a chest X-ray? 
+        Answer ONLY with a JSON object in this format: 
+        {"is_chest_xray": true, "reason": "Explain why"} or {"is_chest_xray": false, "reason": "Explain why this is not a chest X-ray (e.g., 'This is a selfie', 'This is a picture of a cat')"}
+        
+        Be strict. If it is a person's face, a landscape, or any other body part that is not a chest X-ray, mark it as false.
+        """
+        
+        response = model.generate_content([prompt, img])
+        response_text = response.text.replace('```json', '').replace('```', '').strip()
+        
+        result = json.loads(response_text)
+        is_xray = result.get('is_chest_xray', True)
+        reason = result.get('reason', 'Analysis completed')
+        
+        return is_xray, reason
+        
+    except Exception as e:
+        logger.error(f"Gemini image verification failed: {e}")
+        # Fail-open if verification fails technically
+        return True, "Verification failed technically"
