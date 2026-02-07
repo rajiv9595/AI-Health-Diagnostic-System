@@ -1,0 +1,118 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+env/
+ENV/
+
+# Flask
+instance/
+.webassets-cache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Uploads
+backend/uploads/
+uploads/
+
+# Models
+backend/saved_models/*.h5
+# Keep .pkl files for symptom checker!
+!backend/saved_models/*.pkl
+!backend/saved_models/symptom_model.pkl
+!backend/saved_models/symptom_vectorizer.pkl
+!backend/saved_models/symptom_label_encoder.pkl
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp/
+.pnp.js
+
+# React
+frontend/build/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+
+# Logs
+*.log
+logs/
+
+# Docker
+.dockerignore
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Distribution / packaging
+.Python
+*.pyc
+__pycache__/
+*.egg-info/
+dist/
+build/
+
+# Datasets (Large Files - Do Not Commit)
+datasets/COVID-19_Radiography_Dataset/
+datasets/xray_data/
+datasets/xray_data_balanced/
+datasets/processed/
+
+
+
+
+
+
+
+
+
+
+

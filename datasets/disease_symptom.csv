@@ -1,0 +1,73 @@
+symptoms,disease
+"itching, skin rash, nodal skin eruptions",Fungal infection
+"skin rash, nodal skin eruptions, dischromic patches",Fungal infection
+"itching, nodal skin eruptions, dischromic patches",Fungal infection
+"continuous sneezing, shivering, chills",Allergy
+"continuous sneezing, chills, watering from eyes",Allergy
+"shivering, chills, watering from eyes",Allergy
+"stomach pain, acidity, ulcers on tongue, vomiting",GERD
+"stomach pain, ulcers on tongue, vomiting, cough",GERD
+"acidity, ulcers on tongue, vomiting, cough",GERD
+"skin rash, pus filled pimples, blackheads, scurring",Acne
+"pus filled pimples, blackheads, scurring, skin peeling",Acne
+"blackheads, scurring, skin peeling, silver like dusting",Acne
+"vomiting, yellowish skin, abdominal pain, swelling of stomach",Chronic cholestasis
+"yellowish skin, nausea, loss of appetite, abdominal pain",Chronic cholestasis
+"fever, chills, vomiting, high fever",Malaria
+"chills, vomiting, high fever, sweating",Malaria
+"high fever, sweating, headache, nausea",Malaria
+"constipation, pain during bowel movements, pain in anal region",Dimorphic hemmorhoids
+"pain during bowel movements, pain in anal region, bloody stool",Dimorphic hemmorhoids
+"itching, skin rash, fatigue, lethargy",Drug Reaction
+"skin rash, stomach pain, burning micturition, spotting urination",Drug Reaction
+"burning micturition, bladder discomfort, foul smell of urine",Urinary tract infection
+"bladder discomfort, foul smell of urine, continuous feel of urine",Urinary tract infection
+"foul smell of urine, continuous feel of urine, painful urination",Urinary tract infection
+"fever, vomiting, loss of appetite, abdominal pain",Hepatitis A
+"vomiting, yellowish skin, dark urine, nausea",Hepatitis B
+"jaundice, loss of appetite, yellowish skin, abdominal pain",Hepatitis C
+"fatigue, weight loss, yellowish skin, dark urine",Hepatitis D
+"loss of appetite, mild fever, yellowish urine, yellowing of eyes",Hepatitis E
+"joint pain, vomiting, fatigue, high fever",Dengue
+"muscle wasting, patches in throat, high fever, extra marital contacts",AIDS
+"muscle wasting, high fever, extra marital contacts, skin rash",AIDS
+"continuous sneezing, chills, fatigue, cough",Common Cold
+"chills, fatigue, cough, high fever",Common Cold
+"fatigue, cough, high fever, headache",Common Cold
+"continuous sneezing, shivering, chills, watering from eyes",Allergy
+"shivering, chills, watering from eyes, sneezing",Allergy
+"high fever, breathlessness, sweating, malaise",Pneumonia
+"breathlessness, sweating, malaise, phlegm",Pneumonia
+"sweating, fast heart rate, chest pain",Pneumonia
+"cough, high fever, breathlessness, chest pain",COVID-19
+"high fever, breathlessness, fatigue, loss of smell",COVID-19
+"breathlessness, fatigue, loss of smell, sore throat",COVID-19
+"fatigue, weight loss, restlessness, lethargy",Diabetes
+"weight loss, restlessness, lethargy, irregular sugar level",Diabetes
+"restlessness, lethargy, irregular sugar level, blurred and distorted vision",Diabetes
+"acidity, indigestion, headache, blurred and distorted vision",Migraine
+"indigestion, headache, blurred and distorted vision, excessive hunger",Migraine
+"headache, blurred and distorted vision, excessive hunger, stiff neck",Migraine
+"chest pain, dizziness, loss of balance, lack of concentration",Hypertension
+"dizziness, loss of balance, lack of concentration, high blood pressure",Hypertension
+"breathlessness, wheezing, chest tightness, cough",Asthma
+"wheezing, chest tightness, cough, difficulty breathing",Asthma
+"chest tightness, cough, difficulty breathing, fatigue",Asthma
+"fever, cough, chills, fatigue",Bronchitis
+"cough, chills, fatigue, malaise",Bronchitis
+"chills, high fever, sweating, fatigue",Tuberculosis
+"high fever, sweating, fatigue, cough",Tuberculosis
+"sweating, fatigue, cough, weight loss",Tuberculosis
+"fatigue, cough, weight loss, night sweats",Tuberculosis
+"joint pain, neck pain, knee pain, hip joint pain",Osteoarthritis
+"neck pain, knee pain, hip joint pain, swelling joints",Osteoarthritis
+"knee pain, hip joint pain, swelling joints, painful walking",Osteoarthritis
+"vomiting, sunken eyes, dehydration, diarrhoea",Gastroenteritis
+"sunken eyes, dehydration, diarrhoea, nausea",Gastroenteritis
+"dehydration, diarrhoea, nausea, stomach pain",Gastroenteritis
+"chest pain, shortness of breath, nausea, sweating",Heart Attack
+"shortness of breath, nausea, sweating, fatigue",Heart Attack
+"nausea, sweating, fatigue, dizziness",Heart Attack
+"sudden headache, vision problems, difficulty speaking, weakness",Stroke
+"vision problems, difficulty speaking, weakness, numbness",Stroke
+"difficulty speaking, weakness, numbness, loss of balance",Stroke

@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: ai-health-backend
+    env: python
+    buildCommand: pip install -r backend/requirements_prod.txt
+    startCommand: cd backend && gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10.12
+      - key: FLASK_ENV
+        value: production
+    disk:
+      name: models
+      mountPath: /opt/render/project/src/backend/saved_models
+      sizeGB: 1
+
+databases:
+  - name: ai-health-db
+    databaseName: health_db
+    user: health_user
+
+# Note: The free tier does not support persistent disks.
+# For the models to persist across redeploys on free tier, 
+# you should commit the .tflite model to git.
