@@ -31,7 +31,7 @@ def analyze_symptoms_with_gemini(symptoms_text):
         return None
         
     try:
-        # Use Gemini 1.5 Flash (stable, fast)
+        # Using Gemini 1.5 Flash as it is stable and supports vision
         model = genai.GenerativeModel('gemini-1.5-flash')
         
         prompt = f"""
